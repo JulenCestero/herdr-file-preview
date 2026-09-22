@@ -2,6 +2,7 @@
 'use strict';
 
 const { spawnSync } = require('node:child_process');
+const fs = require('node:fs');
 const path = require('node:path');
 const { openPreview } = require('./open-pane.js');
 
@@ -27,14 +28,23 @@ function readClipboard() {
   return '';
 }
 
+const TRAILING_WRAP_CHARS = "`'\">)]}.,;:";
+
 // Herdr's own copy-mode / double-click selection already picks out a
-// whole path-shaped token; this just strips whatever wrapping punctuation
-// prose tends to leave around one (quotes, backticks, trailing periods).
-function cleanPath(text) {
-  return text
-    .trim()
-    .replace(/^[`'"<(\[{]+/, '')
-    .replace(/[`'">)\]}.,;:]+$/, '');
+// whole path-shaped token, but prose tends to leave wrapping punctuation
+// around it (quotes, a closing paren, a sentence-ending period). Stripping
+// that with a plain regex is lossy — it can just as easily chew into a
+// real filename that legitimately ends in one of those characters. So
+// instead this builds candidates from least- to most-stripped and lets the
+// filesystem decide which one is real, rather than guessing blind.
+function trailingCandidates(text) {
+  const candidates = [text];
+  let cur = text;
+  while (cur.length && TRAILING_WRAP_CHARS.includes(cur[cur.length - 1])) {
+    cur = cur.slice(0, -1);
+    candidates.push(cur);
+  }
+  return candidates;
 }
 
 function resolveAgainstPaneCwd(filePath) {
@@ -55,15 +65,18 @@ function resolveAgainstPaneCwd(filePath) {
   return filePath;
 }
 
-const clipboardText = cleanPath(readClipboard());
+function resolve(filePath) {
+  return path.isAbsolute(filePath) ? filePath : resolveAgainstPaneCwd(filePath);
+}
 
-if (!clipboardText) {
+const raw = readClipboard().trim().replace(/^[`'"<(\[{]+/, '');
+
+if (!raw) {
   console.error('clipboard is empty or unreadable');
   process.exit(0);
 }
 
-const filePath = path.isAbsolute(clipboardText)
-  ? clipboardText
-  : resolveAgainstPaneCwd(clipboardText);
+const resolvedCandidates = trailingCandidates(raw).map(resolve);
+const filePath = resolvedCandidates.find((p) => fs.existsSync(p)) || resolvedCandidates.at(-1);
 
 openPreview(filePath);
