@@ -78,13 +78,13 @@ command = "jc.file-preview.open-selection"
 description = "preview copied file path"
 ```
 
-Prefer a `prefix+` binding over a direct chord like `ctrl+alt+f` or
-`ctrl+shift+f` — those collide easily with the outer terminal (AltGr is
-`ctrl+alt` on most non-US layouts; Windows Terminal binds `ctrl+shift+f` to
-its own Find by default) or the OS, and the outer terminal swallows the
-keypress before Herdr ever sees it. A `prefix+` binding is two sequential
-presses instead of one simultaneous chord, so it can't collide with a
-simultaneous-chord shortcut owned by anything outside Herdr.
+If you want a direct chord instead of a `prefix+` sequence, pick a bare
+function key — `ctrl+f2` is confirmed working. Avoid `ctrl+alt+<letter>`
+(collides with AltGr on most non-US layouts) and `ctrl+shift+<letter>`
+(Windows Terminal's own default bindings own most of that space — e.g.
+`ctrl+shift+f` is Find). Both get swallowed by the outer terminal/OS
+before Herdr ever sees them; a `prefix+` binding or an `F`-key chord avoids
+that whole collision space.
 
 Select the path (double-click uses Herdr's own path-aware smart selection;
 drag-select or copy mode also work), copy it, then press the bound key.
