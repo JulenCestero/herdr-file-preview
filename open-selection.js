@@ -3,6 +3,7 @@
 
 const { spawnSync } = require('node:child_process');
 const fs = require('node:fs');
+const os = require('node:os');
 const path = require('node:path');
 const { openPreview } = require('./open-pane.js');
 
@@ -65,8 +66,20 @@ function resolveAgainstPaneCwd(filePath) {
   return filePath;
 }
 
+// path.isAbsolute/path.resolve don't understand '~' as a shell shorthand
+// for the home directory — Node treats it as a literal path segment, which
+// silently produced <cwd>/~/... instead of the actual home directory.
+function expandHome(filePath) {
+  if (filePath === '~') return os.homedir();
+  if (filePath.startsWith('~/') || filePath.startsWith('~\\')) {
+    return path.join(os.homedir(), filePath.slice(2));
+  }
+  return filePath;
+}
+
 function resolve(filePath) {
-  return path.isAbsolute(filePath) ? filePath : resolveAgainstPaneCwd(filePath);
+  const expanded = expandHome(filePath);
+  return path.isAbsolute(expanded) ? expanded : resolveAgainstPaneCwd(expanded);
 }
 
 const raw = readClipboard().trim().replace(/^[`'"<(\[{]+/, '');
