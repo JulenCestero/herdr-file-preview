@@ -36,6 +36,13 @@ on a link matching `^file://` opens a right split pane and renders the
 target file. Clicking another `file://` link closes the previous preview
 pane first, so you get one reused pane instead of a stack of them.
 
+## Known limitation
+
+The reused-pane tracking (`HERDR_PLUGIN_STATE_DIR/preview_pane_id`) is one
+file per plugin install, not per workspace. With more than one Herdr window
+open at once, clicking a `file://` link in one window can close a preview
+pane that belongs to a different window.
+
 ## Requirements
 
 - [Node.js](https://nodejs.org) on `PATH` — the plugin's own runtime.

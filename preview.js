@@ -44,5 +44,7 @@ if (glow.error) {
   console.log(filePath);
   console.log('-'.repeat(Math.min(filePath.length, 80)));
   process.stdout.write(fs.readFileSync(filePath, 'utf8'));
-  waitForEnter();
+} else if (glow.status !== 0) {
+  console.log(`glow exited with status ${glow.status}`);
 }
+waitForEnter();

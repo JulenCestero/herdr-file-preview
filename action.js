@@ -40,6 +40,10 @@ args.push('--env', `FILE_URL=${clickedUrl}`, '--focus');
 
 const result = spawnSync(herdrBin, args, { encoding: 'utf8' });
 
+if (result.error) {
+  process.stderr.write(`could not run herdr: ${result.error.message}\n`);
+  process.exit(0);
+}
 if (result.status !== 0) {
   process.stderr.write(result.stderr || `herdr plugin pane open failed (exit ${result.status})\n`);
   process.exit(0);
