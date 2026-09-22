@@ -4,17 +4,17 @@
 ![platforms](https://img.shields.io/badge/platforms-windows%20%7C%20linux%20%7C%20macos-lightgrey)
 ![no dependencies](https://img.shields.io/badge/dependencies-none-brightgreen)
 
-Ctrl+click a `file:///...` link in a [Herdr](https://herdr.dev) pane and preview
-it in a pane on the right — instead of it launching whatever app is registered
-for that file extension.
+Ctrl+click a file-preview link printed in a [Herdr](https://herdr.dev) pane and
+preview that file in a pane on the right — instead of it launching whatever
+app is registered for that file extension.
 
 ```
 ┌─────────────────────────────┐┌─────────────────────────────┐
 │ $ claude                     ││ report.md                    │
 │                               ││ ──────────────────────────  │
 │ Wrote the report to           ││ # Q3 Infra Review             │
-│ file:///…/report.md ◄─ click  ││                               │
-│                               ││ ## Summary                    │
+│ …herdr-file-preview.invalid/  ││                               │
+│ open?path=…report.md ◄─ click ││ ## Summary                    │
 │ $                             ││ Latency dropped 40% after…    │
 └─────────────────────────────┘└─────────────────────────────┘
         agent pane                    preview pane (glow)
@@ -22,12 +22,21 @@ for that file extension.
 
 ## Why
 
-Herdr only treats text shaped like a URL (`scheme://...`) as clickable —
-plain file paths printed in terminal output are never clickable, plugin or
-not. So this only helps for `file://` links something *emits on purpose* —
-e.g. an agent that prints `file:///C:/Users/you/report.md` when it wants to
-point you at something worth reading, instead of leaving it as a bare path
-in prose.
+Herdr's own client only ever treats `http://`/`https://` text as
+hoverable/clickable at all — verified in `herdrdev/herdr`'s source
+(`src/app/actions.rs`, `safe_web_url`). A `file://` link, OSC 8 hyperlink or
+not, never reaches a plugin's `link_handler`: the base UI layer filters it
+out before that. There's no config to widen it.
+
+So this plugin's trigger link isn't `file://` — it's a fake
+`http://herdr-file-preview.invalid/open?path=<encoded path>` URL.
+`.invalid` is the RFC 2606 TLD guaranteed to never resolve. The link is
+never actually fetched: Herdr's `link_handler` intercepts the click before
+it would try to open the URL externally, so the non-resolving domain is
+just a trigger shape, not a real address. This only helps for a link
+something *emits on purpose* — e.g. an agent that prints one of these when
+it wants to point you at something worth reading, instead of leaving it as
+a bare path in prose.
 
 ## Install
 
@@ -44,9 +53,16 @@ herdr plugin link /path/to/herdr-file-preview
 ## Behavior
 
 Ctrl+click (the modified-click gesture on every platform, including macOS)
-on a link matching `^file://` opens a right split pane and renders the
-target file. Clicking another `file://` link closes the previous preview
-pane first, so you get one reused pane instead of a stack of them.
+on a link matching `^https?://herdr-file-preview\.invalid/open\?path=`
+opens a right split pane and renders the target file. Clicking another
+file-preview link closes the previous preview pane first, so you get one
+reused pane instead of a stack of them.
+
+To emit a link, URL-encode the absolute path and build:
+
+```
+http://herdr-file-preview.invalid/open?path=<encoded absolute path>
+```
 
 ## How it works
 
@@ -54,14 +70,13 @@ Two entrypoints, both plain Node.js — no dependencies, no build step, one
 code path for Windows, Linux, and macOS:
 
 - **`action.js`** — runs on click. Reads the clicked URL from
-  `HERDR_PLUGIN_CLICKED_URL`, closes the previously-opened preview pane
-  (tracked in `HERDR_PLUGIN_STATE_DIR`), and asks Herdr to open a new split
-  pane running `preview.js`.
-- **`preview.js`** — runs inside that pane. Resolves the `file://` URL to a
-  local path with Node's own `fileURLToPath` (handles Windows drive letters
-  and POSIX paths correctly without manual parsing), then pipes it through
-  [`glow`](https://github.com/charmbracelet/glow) if it's on `PATH`, or dumps
-  the raw file otherwise.
+  `HERDR_PLUGIN_CLICKED_URL`, pulls the `path` query param back out,
+  closes the previously-opened preview pane (tracked in
+  `HERDR_PLUGIN_STATE_DIR`), and asks Herdr to open a new split pane
+  running `preview.js`.
+- **`preview.js`** — runs inside that pane. Reads the path from `FILE_PATH`
+  and pipes it through [`glow`](https://github.com/charmbracelet/glow) if
+  it's on `PATH`, or dumps the raw file otherwise.
 
 ## Requirements
 
@@ -74,8 +89,8 @@ code path for Windows, Linux, and macOS:
 
 The reused-pane tracking (`HERDR_PLUGIN_STATE_DIR/preview_pane_id`) is one
 file per plugin install, not per workspace. With more than one Herdr window
-open at once, clicking a `file://` link in one window can close a preview
-pane that belongs to a different window.
+open at once, clicking a file-preview link in one window can close a
+preview pane that belongs to a different window.
 
 ## License
 
