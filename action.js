@@ -16,6 +16,22 @@ if (!clickedUrl) {
   process.exit(0);
 }
 
+// Herdr only treats http(s):// text as a clickable/hoverable link at all
+// (src/app/actions.rs: safe_web_url) — file:// links are invisible to it,
+// no plugin can change that. So links use a fake http://*.invalid URL as a
+// trigger; it's never actually fetched, the link_handler intercepts the
+// click before Herdr would try to open it externally.
+let filePath = '';
+try {
+  filePath = new URL(clickedUrl).searchParams.get('path') || '';
+} catch {
+  // malformed URL — filePath stays empty, handled below
+}
+if (!filePath) {
+  console.error(`could not extract a path from: ${clickedUrl}`);
+  process.exit(0);
+}
+
 // Close the previous preview pane first so this click replaces it instead of
 // stacking a new split every time.
 let prevPaneId = '';
@@ -36,7 +52,7 @@ const args = [
   '--direction', 'right',
 ];
 if (anchorPane) args.push('--target-pane', anchorPane);
-args.push('--env', `FILE_URL=${clickedUrl}`, '--focus');
+args.push('--env', `FILE_PATH=${filePath}`, '--focus');
 
 const result = spawnSync(herdrBin, args, { encoding: 'utf8' });
 

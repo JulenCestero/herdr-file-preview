@@ -3,9 +3,8 @@
 
 const { spawnSync } = require('node:child_process');
 const fs = require('node:fs');
-const { fileURLToPath } = require('node:url');
 
-const rawUrl = process.env.FILE_URL || process.env.HERDR_PLUGIN_CLICKED_URL || '';
+const filePath = process.env.FILE_PATH || '';
 
 function waitForEnter() {
   process.stdout.write('\npress enter to close this preview...');
@@ -16,17 +15,8 @@ function waitForEnter() {
   }
 }
 
-if (!rawUrl) {
-  console.log('missing FILE_URL');
-  waitForEnter();
-  process.exit(0);
-}
-
-let filePath;
-try {
-  filePath = fileURLToPath(rawUrl);
-} catch {
-  console.log(`not a file:// URL:\n${rawUrl}`);
+if (!filePath) {
+  console.log('missing FILE_PATH');
   waitForEnter();
   process.exit(0);
 }

@@ -17,7 +17,7 @@ placement = "split"
 command = ["node", "preview.js"]
 
 [[link_handlers]]
-id = "file-uri"
-title = "Preview file:// link"
-pattern = "^file://"
+id = "file-preview"
+title = "Preview file link"
+pattern = "^https?://herdr-file-preview\\.invalid/open\\?path="
 action = "open"
