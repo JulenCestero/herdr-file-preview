@@ -72,7 +72,7 @@ that case, bind a key to the `open-selection` action:
 
 ```toml
 [[keys.command]]
-key = "prefix+f"
+key = "ctrl+alt+f"
 type = "plugin_action"
 command = "jc.file-preview.open-selection"
 description = "preview copied file path"
