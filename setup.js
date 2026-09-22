@@ -28,7 +28,14 @@ try {
   // no config file yet — Herdr runs fine without one; we'll create it
 }
 
-if (content.includes(ACTION)) {
+// Anchored to the `command =` field specifically, not a bare substring
+// match — a stray comment mentioning the action id, or a future action id
+// that happens to have this one as a prefix, must not count as "already
+// configured".
+const escapedAction = ACTION.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const alreadyConfigured = new RegExp(`command\\s*=\\s*["']${escapedAction}["']`).test(content);
+
+if (alreadyConfigured) {
   console.log(`already configured in ${file} — nothing to do.`);
   process.exit(0);
 }
