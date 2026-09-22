@@ -68,7 +68,23 @@ http://herdr-file-preview.invalid/open?path=<encoded absolute path>
 
 Not everything that mentions a file formats it as a link — a plain path in
 prose is never clickable in Herdr, link or no link (see Why, above). For
-that case, bind a key to the `open-selection` action:
+that case, bind a key to the `open-selection` action. Plugins can't
+register keybindings themselves (Herdr only reads those from your own
+`config.toml`), so this is a one-command stand-in for editing that file by
+hand:
+
+```sh
+# cloned/linked locally — runs inline, prints its own result
+node setup.js
+
+# installed via `herdr plugin install` — runs detached, check the log
+herdr plugin action invoke jc.file-preview.setup-keybinding
+herdr plugin log list --plugin jc.file-preview --limit 1
+```
+
+It's idempotent — running it again after the key is already bound just
+reports that and does nothing. To do it by hand instead, or to change the
+key, add or edit this block directly in `config.toml`:
 
 ```toml
 [[keys.command]]
@@ -94,7 +110,7 @@ own shell.
 
 ## How it works
 
-Four files, all plain Node.js — no dependencies, no build step, one code
+Five files, all plain Node.js — no dependencies, no build step, one code
 path for Windows, Linux, and macOS:
 
 - **`open-pane.js`** — shared logic: closes the previously-opened preview
@@ -110,6 +126,8 @@ path for Windows, Linux, and macOS:
 - **`preview.js`** — runs inside the preview pane. Reads the path from
   `FILE_PATH` and pipes it through [`glow`](https://github.com/charmbracelet/glow)
   if it's on `PATH`, or dumps the raw file otherwise.
+- **`setup.js`** — the one-command keybinding installer described above.
+  Not part of the click/preview flow at all.
 
 ## Requirements
 

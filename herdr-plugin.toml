@@ -15,6 +15,11 @@ id = "open-selection"
 title = "Preview copied path"
 command = ["node", "open-selection.js"]
 
+[[actions]]
+id = "setup-keybinding"
+title = "Bind a key to preview a copied path"
+command = ["node", "setup.js"]
+
 [[panes]]
 id = "preview"
 title = "File preview"
