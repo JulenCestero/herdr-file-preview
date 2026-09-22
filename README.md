@@ -64,19 +64,44 @@ To emit a link, URL-encode the absolute path and build:
 http://herdr-file-preview.invalid/open?path=<encoded absolute path>
 ```
 
+### Plain paths (no link required)
+
+Not everything that mentions a file formats it as a link — a plain path in
+prose is never clickable in Herdr, link or no link (see Why, above). For
+that case, bind a key to the `open-selection` action:
+
+```toml
+[[keys.command]]
+key = "prefix+f"
+type = "plugin_action"
+command = "jc.file-preview.open-selection"
+description = "preview copied file path"
+```
+
+Select the path (double-click uses Herdr's own path-aware smart selection;
+drag-select or copy mode also work), copy it, then press the bound key.
+Relative paths resolve against the *focused pane's* working directory, so
+this also handles a relative path exactly as an agent would print it in its
+own shell.
+
 ## How it works
 
-Two entrypoints, both plain Node.js — no dependencies, no build step, one
-code path for Windows, Linux, and macOS:
+Four files, all plain Node.js — no dependencies, no build step, one code
+path for Windows, Linux, and macOS:
 
-- **`action.js`** — runs on click. Reads the clicked URL from
-  `HERDR_PLUGIN_CLICKED_URL`, pulls the `path` query param back out,
-  closes the previously-opened preview pane (tracked in
-  `HERDR_PLUGIN_STATE_DIR`), and asks Herdr to open a new split pane
-  running `preview.js`.
-- **`preview.js`** — runs inside that pane. Reads the path from `FILE_PATH`
-  and pipes it through [`glow`](https://github.com/charmbracelet/glow) if
-  it's on `PATH`, or dumps the raw file otherwise.
+- **`open-pane.js`** — shared logic: closes the previously-opened preview
+  pane (tracked in `HERDR_PLUGIN_STATE_DIR`) and asks Herdr to open a new
+  split pane running `preview.js` for the given path.
+- **`action.js`** — the link-click action. Reads the clicked URL from
+  `HERDR_PLUGIN_CLICKED_URL`, pulls the `path` query param back out, hands
+  it to `open-pane.js`.
+- **`open-selection.js`** — the keybinding action. Reads the system
+  clipboard, strips wrapping quotes/punctuation, resolves a relative path
+  against the focused pane's cwd (`herdr pane get`), hands it to
+  `open-pane.js`.
+- **`preview.js`** — runs inside the preview pane. Reads the path from
+  `FILE_PATH` and pipes it through [`glow`](https://github.com/charmbracelet/glow)
+  if it's on `PATH`, or dumps the raw file otherwise.
 
 ## Requirements
 

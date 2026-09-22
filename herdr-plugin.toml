@@ -2,13 +2,18 @@ id = "jc.file-preview"
 name = "File Preview"
 version = "0.1.0"
 min_herdr_version = "0.7.0"
-description = "Ctrl+click a file:// link and preview it in a right-side Herdr pane instead of launching an external app."
+description = "Ctrl+click a file-preview link, or select a path and press a key, to preview it in a right-side Herdr pane instead of launching an external app."
 platforms = ["linux", "macos", "windows"]
 
 [[actions]]
 id = "open"
 title = "Preview file"
 command = ["node", "action.js"]
+
+[[actions]]
+id = "open-selection"
+title = "Preview copied path"
+command = ["node", "open-selection.js"]
 
 [[panes]]
 id = "preview"
