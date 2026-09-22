@@ -30,11 +30,15 @@ if (!fs.existsSync(filePath)) {
 const glow = spawnSync('glow', ['-p', filePath], { stdio: 'inherit' });
 
 if (glow.error) {
-  // glow not installed — fall back to a raw dump
+  // glow not installed — fall back to a raw dump, which has no pager of its
+  // own to wait on, so wait for Enter before the pane closes.
   console.log(filePath);
   console.log('-'.repeat(Math.min(filePath.length, 80)));
   process.stdout.write(fs.readFileSync(filePath, 'utf8'));
+  waitForEnter();
 } else if (glow.status !== 0) {
   console.log(`glow exited with status ${glow.status}`);
+  waitForEnter();
 }
-waitForEnter();
+// glow succeeded: its own pager already waited on `q` — closing right after
+// it exits is the expected close gesture, no second prompt needed.
