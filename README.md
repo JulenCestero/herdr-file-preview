@@ -50,6 +50,10 @@ Or for local development:
 herdr plugin link /path/to/herdr-file-preview
 ```
 
+That's enough for the click-to-preview flow (see Behavior, below). For the
+keybinding flow (previewing a plain, unlinked path), run the one-command
+setup too — see [Plain paths](#plain-paths-no-link-required).
+
 ## Behavior
 
 Ctrl+click (the modified-click gesture on every platform, including macOS)
