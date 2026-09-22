@@ -76,7 +76,16 @@ if (!raw) {
   process.exit(0);
 }
 
-const resolvedCandidates = trailingCandidates(raw).map(resolve);
+// trailingCandidates keeps stripping down to '' if raw is nothing but wrap
+// chars (e.g. clipboard holding just "."); drop that before resolving, or
+// the fallback candidate would resolve to the pane's cwd itself.
+const candidates = trailingCandidates(raw).filter(Boolean);
+if (!candidates.length) {
+  console.error(`nothing left after stripping wrapping punctuation: ${JSON.stringify(raw)}`);
+  process.exit(0);
+}
+
+const resolvedCandidates = candidates.map(resolve);
 const filePath = resolvedCandidates.find((p) => fs.existsSync(p)) || resolvedCandidates.at(-1);
 
 openPreview(filePath);
