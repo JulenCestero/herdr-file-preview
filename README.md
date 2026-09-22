@@ -72,11 +72,19 @@ that case, bind a key to the `open-selection` action:
 
 ```toml
 [[keys.command]]
-key = "ctrl+alt+f"
+key = "prefix+f"
 type = "plugin_action"
 command = "jc.file-preview.open-selection"
 description = "preview copied file path"
 ```
+
+Prefer a `prefix+` binding over a direct chord like `ctrl+alt+f` or
+`ctrl+shift+f` — those collide easily with the outer terminal (AltGr is
+`ctrl+alt` on most non-US layouts; Windows Terminal binds `ctrl+shift+f` to
+its own Find by default) or the OS, and the outer terminal swallows the
+keypress before Herdr ever sees it. A `prefix+` binding is two sequential
+presses instead of one simultaneous chord, so it can't collide with a
+simultaneous-chord shortcut owned by anything outside Herdr.
 
 Select the path (double-click uses Herdr's own path-aware smart selection;
 drag-select or copy mode also work), copy it, then press the bound key.
